@@ -1,0 +1,46 @@
+@import "tailwindcss";
+
+@theme inline {
+  --font-sans: "Inter", "Noto Sans KR", -apple-system, BlinkMacSystemFont, sans-serif;
+  --color-accent: #2563eb;
+  --color-accent-light: #eff6ff;
+  --color-background: #fafafa;
+  --color-foreground: #1a1a1a;
+}
+
+html { scroll-behavior: smooth; }
+
+::selection {
+  background: var(--color-accent-light);
+  color: var(--color-accent);
+}
+
+body {
+  background: var(--color-background);
+  color: var(--color-foreground);
+  font-family: var(--font-sans);
+}
+
+/* Blog prose styles */
+.prose h1 { font-size: 2rem; font-weight: 700; margin-top: 2rem; margin-bottom: 1rem; letter-spacing: -0.5px; }
+.prose h2 { font-size: 1.5rem; font-weight: 700; margin-top: 1.75rem; margin-bottom: 0.75rem; }
+.prose h3 { font-size: 1.25rem; font-weight: 600; margin-top: 1.5rem; margin-bottom: 0.5rem; }
+.prose p { margin-bottom: 1.25rem; line-height: 1.85; color: #444; }
+.prose ul, .prose ol { margin-bottom: 1.25rem; padding-left: 1.5rem; }
+.prose li { margin-bottom: 0.5rem; line-height: 1.75; color: #444; }
+.prose code {
+  background: #f3f4f6; padding: 0.15rem 0.4rem;
+  border-radius: 4px; font-size: 0.875rem; color: #e11d48;
+}
+.prose pre {
+  background: #1e293b; color: #e2e8f0; padding: 1.25rem;
+  border-radius: 10px; overflow-x: auto; margin-bottom: 1.5rem;
+  font-size: 0.875rem; line-height: 1.7;
+}
+.prose pre code { background: none; padding: 0; color: inherit; }
+.prose blockquote {
+  border-left: 3px solid var(--color-accent); padding-left: 1rem;
+  margin-bottom: 1.25rem; color: #666; font-style: italic;
+}
+.prose a { color: var(--color-accent); text-decoration: underline; text-underline-offset: 2px; }
+.prose img { border-radius: 10px; margin: 1.5rem 0; }
