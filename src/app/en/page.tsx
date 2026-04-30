@@ -1,43 +1,50 @@
-import { getCachedBlogPosts } from "../lib/notion";
-import PostListItem from "../components/PostListItem";
-import { profile } from "../data/profile";
+import { getCachedBlogPosts } from "../../lib/notion";
+import PostListItem from "../../components/PostListItem";
+import { profile } from "../../data/profile";
 import Link from "next/link";
 
 export const revalidate = 60;
 
-export default async function Home({
+export const metadata = {
+  title: "Han Jiwoong",
+  description:
+    "Program / Project Manager who bridges strategy, operations, and SCM to turn complex problems into executable structures and scalable operating mechanisms.",
+};
+
+export default async function EnHome({
   searchParams,
 }: {
   searchParams: Promise<{ category?: string }>;
 }) {
   const { category } = await searchParams;
   const posts = await getCachedBlogPosts();
-  const p = profile.ko;
+  const p = profile.en;
 
   const filtered =
-    category && category !== "전체"
-      ? posts.filter((p) => p.category === category)
+    category && category !== "전체" && category !== "All"
+      ? posts.filter((post) => post.category === category)
       : posts;
 
-  const isFiltered = !!category && category !== "전체";
+  const isFiltered =
+    !!category && category !== "전체" && category !== "All";
 
   return (
     <section className="max-w-[680px] px-8 pt-12 pb-20">
-      {/* 소개 — 카테고리 필터 없을 때만 표시 */}
+      {/* Intro — only when not filtering */}
       {!isFiltered && (
         <div className="mb-12">
-          <p className="text-sm text-gray-400 mb-1">안녕하세요, ✋</p>
+          <p className="text-sm text-gray-400 mb-1">Hello, ✋</p>
           <h1 className="text-2xl font-bold tracking-tight text-gray-900 mb-3">
-            {p.name}입니다.
+            I&apos;m {p.name}.
           </h1>
           <p className="text-[15px] text-gray-600 leading-relaxed">
             {p.tagline}
           </p>
           <Link
-            href="/about"
+            href="/en/about"
             className="inline-block mt-4 text-sm text-blue-600 hover:underline"
           >
-            더 알아보기 →
+            Learn more &rarr;
           </Link>
         </div>
       )}
@@ -50,11 +57,11 @@ export default async function Home({
 
       <div className="divide-y divide-gray-100">
         {filtered.map((post) => (
-          <PostListItem key={post.id} post={post} />
+          <PostListItem key={post.id} post={post} locale="en" />
         ))}
         {filtered.length === 0 && (
           <p className="text-center text-gray-400 py-20 text-sm">
-            아직 작성된 글이 없습니다.
+            No posts yet.
           </p>
         )}
       </div>

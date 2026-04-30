@@ -1,36 +1,64 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# jiwoong-site
 
-## Getting Started
+한지웅의 개인 사이트 — 이력서 / 포트폴리오 / 글을 통합 관리.
 
-First, run the development server:
+## 스택
+
+- Next.js 16 (App Router) · React 19 · TypeScript · Tailwind v4
+- ISR(60s)
+- 정적 콘텐츠 (이력서·포트폴리오·일부 글) → `src/data/*.ts`
+- 일상 글 → Notion API (`@notionhq/client`)
+- 한국어/영어 분리: `/`, `/about`, `/portfolio`, `/blog/[slug]`, `/portfolio/[slug]` (KO) · `/en`, `/en/about` (EN)
+
+## 로컬 실행
 
 ```bash
+npm install
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+→ http://localhost:3000
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## 환경 변수
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+`.env.local` 에 아래 값들이 필요합니다 (Notion 연동용):
 
-## Learn More
+```
+NOTION_TOKEN=...
+NOTION_BLOG_DATABASE_ID=...
+NOTION_PORTFOLIO_DATABASE_ID=...
+NOTION_THOUGHTS_DATABASE_ID=...
+NEXT_PUBLIC_SITE_URL=https://your-domain.com  # 배포 시
+```
 
-To learn more about Next.js, take a look at the following resources:
+`NEXT_PUBLIC_SITE_URL` 은 OG 메타데이터·sitemap 생성에 사용됩니다.
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## 데이터 수정
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+| 영역 | 위치 |
+|------|------|
+| 프로필 (이름·태그라인·연락처) | `src/data/profile.ts` |
+| 경력 타임라인 | `src/data/career.ts` |
+| 프로젝트 + 케이스 스터디 | `src/data/projects.ts` |
+| 스킬 | `src/data/skills.ts` |
+| 학력·자격 | `src/data/education.ts` |
+| 정적 블로그 글 | `src/data/posts.ts` |
+| 일상 글 | Notion 블로그 DB |
 
-## Deploy on Vercel
+## 배포
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+Vercel:
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+1. GitHub 레포로 push
+2. https://vercel.com/new 에서 import
+3. 환경 변수 등록 (위 표 참고)
+4. Deploy
+
+## 라우트
+
+- `/` 한국어 홈 (인트로 + 글 리스트, `?category=` 필터)
+- `/about` 이력서
+- `/portfolio` 포트폴리오 카드 그리드
+- `/portfolio/[slug]` 케이스 스터디 (5단 구조)
+- `/blog/[slug]` 글 상세 (정적 + Notion 통합)
+- `/en`, `/en/about` 영어 버전

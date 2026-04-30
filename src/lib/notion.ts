@@ -1,9 +1,11 @@
+import { cache } from "react";
 import { Client } from "@notionhq/client";
 import {
   PageObjectResponse,
   RichTextItemResponse,
   BlockObjectResponse,
 } from "@notionhq/client/build/src/api-endpoints";
+import { staticPosts, type PostBlock } from "../data/posts";
 
 // ─── Client ───────────────────────────────────────────────
 const notion = new Client({ auth: process.env.NOTION_TOKEN });
@@ -93,18 +95,42 @@ export interface ThoughtItem {
 }
 
 // ─── Blog ─────────────────────────────────────────────────
+function staticPostsAsBlogPosts(): BlogPost[] {
+  return staticPosts.map((p) => ({
+    id: `static-${p.slug}`,
+    slug: p.slug,
+    title: p.title,
+    description: p.description,
+    category: p.category,
+    date: p.date,
+    readTime: p.readTime,
+    cover: p.cover,
+    published: true,
+  }));
+}
+
+function mergeAndSortPosts(notionPosts: BlogPost[]): BlogPost[] {
+  const merged = [...notionPosts, ...staticPostsAsBlogPosts()];
+  // 날짜 내림차순. 빈 날짜는 뒤로.
+  merged.sort((a, b) => {
+    if (!a.date) return 1;
+    if (!b.date) return -1;
+    return a.date < b.date ? 1 : a.date > b.date ? -1 : 0;
+  });
+  return merged;
+}
+
 export async function getBlogPosts(): Promise<BlogPost[]> {
   const databaseId = process.env.NOTION_BLOG_DATABASE_ID;
-  if (!databaseId) return getSampleBlogPosts();
+  if (!databaseId) return mergeAndSortPosts(getSampleBlogPosts());
 
   try {
     const response = await notion.databases.query({
       database_id: databaseId,
-      filter: { property: "Published", checkbox: { equals: true } },
       sorts: [{ property: "Date", direction: "descending" }],
     });
 
-    return response.results
+    const notionPosts: BlogPost[] = response.results
       .filter((p): p is PageObjectResponse => "properties" in p)
       .map((page) => ({
         id: page.id,
@@ -117,27 +143,48 @@ export async function getBlogPosts(): Promise<BlogPost[]> {
         cover: getCover(page),
         published: true,
       }));
+
+    return mergeAndSortPosts(notionPosts);
   } catch {
-    return getSampleBlogPosts();
+    return mergeAndSortPosts(getSampleBlogPosts());
   }
 }
 
-export async function getPostBySlug(slug: string): Promise<{
-  post: BlogPost;
-  blocks: BlockObjectResponse[];
-} | null> {
+export type PostBySlugResult =
+  | { kind: "static"; post: BlogPost; staticBlocks: PostBlock[] }
+  | { kind: "notion"; post: BlogPost; blocks: BlockObjectResponse[] };
+
+export async function getPostBySlug(
+  slug: string
+): Promise<PostBySlugResult | null> {
+  // 1) 정적 포스트부터 확인
+  const sp = staticPosts.find((p) => p.slug === slug);
+  if (sp) {
+    return {
+      kind: "static",
+      post: {
+        id: `static-${sp.slug}`,
+        slug: sp.slug,
+        title: sp.title,
+        description: sp.description,
+        category: sp.category,
+        date: sp.date,
+        readTime: sp.readTime,
+        cover: sp.cover,
+        published: true,
+      },
+      staticBlocks: sp.blocks,
+    };
+  }
+
+  // 2) Notion fallback
   const databaseId = process.env.NOTION_BLOG_DATABASE_ID;
   if (!databaseId) return null;
 
   try {
     const response = await notion.databases.query({
       database_id: databaseId,
-      filter: {
-        and: [
-          { property: "Slug", rich_text: { equals: slug } },
-          { property: "Published", checkbox: { equals: true } },
-        ],
-      },
+      filter: { property: "Slug", rich_text: { equals: slug } },
     });
 
     const rawPage = response.results[0];
@@ -147,6 +194,7 @@ export async function getPostBySlug(slug: string): Promise<{
     const blocks = await notion.blocks.children.list({ block_id: page.id });
 
     return {
+      kind: "notion",
       post: {
         id: page.id,
         slug,
@@ -342,3 +390,6 @@ function getSampleThoughts(): ThoughtItem[] {
     },
   ];
 }
+
+// ─── Request-scoped cache (React cache) ───────────────────
+export const getCachedBlogPosts = cache(getBlogPosts);
